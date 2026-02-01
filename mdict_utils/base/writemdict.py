@@ -27,7 +27,7 @@ Simple usage example:
 
 from __future__ import unicode_literals
 
-import struct, zlib, operator, sys, datetime
+import struct, zlib, operator, sys, datetime, deflate
 
 from .ripemd128 import ripemd128
 # from cgi import escape
@@ -46,11 +46,11 @@ class ParameterError(Exception):
 
 def _mdx_compress(data, compression_type=2):
 	header = (struct.pack(b"<L", compression_type) + 
-	         struct.pack(b">L", zlib.adler32(data) & 0xffffffff)) #depending on python version, zlib.adler32 may return a signed number. 
+	         struct.pack(b">L", deflate.adler32(data) & 0xffffffff)) #depending on python version, zlib.adler32 may return a signed number. 
 	if compression_type == 0: #no compression
 		return header + data
 	elif compression_type == 2:
-		return header + zlib.compress(data)
+		return header + deflate.zlib_compress(data)
 	elif compression_type == 1:
 		if HAVE_LZO:
 			return header + lzo.compress(data)[5:] #python-lzo adds a 5-byte header.
@@ -392,7 +392,7 @@ class MDictWriter(object):
 			    self._keyb_index_decomp_size,
 			    self._keyb_index_comp_size,
 			    keyblocks_total_size)
-			preamble_checksum = struct.pack(b">L", zlib.adler32(preamble))
+			preamble_checksum = struct.pack(b">L", deflate.adler32(preamble))
 			if(self._encrypt):
 				preamble = _salsa_encrypt(preamble, self._encrypt_key)
 			outfile.write(preamble)
@@ -521,7 +521,7 @@ class MDictWriter(object):
 			).encode("utf_16_le")
 		f.write(struct.pack(b">L", len(header_string)))
 		f.write(header_string)
-		f.write(struct.pack(b"<L",zlib.adler32(header_string) & 0xffffffff))
+		f.write(struct.pack(b"<L", deflate.adler32(header_string) & 0xffffffff))
 
 class _MdxBlock(object):
 	# Abstract base class for _MdxRecordBlock and _MdxKeyBlock.
