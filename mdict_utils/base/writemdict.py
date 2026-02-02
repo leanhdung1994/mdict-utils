@@ -27,7 +27,7 @@ Simple usage example:
 
 from __future__ import unicode_literals
 
-import struct, zlib, operator, sys, datetime, deflate
+import struct, operator, sys, datetime, deflate
 
 from .ripemd128 import ripemd128
 # from cgi import escape
