@@ -9,7 +9,7 @@ import locale
 import deflate
 import datetime
 from html import escape
-
+from multiprocessing import cpu_count, Pool
 from tqdm import tqdm
 
 from .base.writemdict import MDictWriter as MDictWriterBase, \
@@ -98,6 +98,21 @@ class _MdxRecordBlock(_MdxRecordBlockBase):
     def _len_block_entry(t):
         return t.record_size
 
+def _compress_record_block(args):
+    """
+    Worker-safe function.
+    """
+    offset_table, compression_type, version = args
+
+    block = _MdxRecordBlock(offset_table, compression_type, version)
+    block.prepare()
+
+    return (
+        block.get_block(),
+        block.get_index_entry(),
+        len(block.get_block()),
+        len(block._offset_table),
+    )
 
 class MDictWriter(MDictWriterBase):
     def __init__(self, d, title, description,
@@ -199,30 +214,52 @@ class MDictWriter(MDictWriterBase):
         else:
             record_format = b">LLLL"
             index_format = b">LL"
-        # fill ZERO
+
         record_pos = outfile.tell()
+
+        # Placeholder header
         outfile.write(struct.pack(record_format, 0, 0, 0, 0))
         outfile.write((struct.pack(index_format, 0, 0)) * len(self._record_blocks))
 
+        workers = max(1, round(0.5*os.cpu_count()))
+        tasks = (
+            (b._offset_table, self._compression_type, self._version)
+            for b in self._record_blocks
+        )
+
         recordblocks_total_size = 0
         recordb_index = []
-        for b in self._record_blocks:
-            b.prepare()
-            recordblocks_total_size += len(b.get_block())
-            recordb_index.append(b.get_index_entry())
-            outfile.write(b.get_block())
-            callback and callback(len(b._offset_table))
-            b.clean()
+        to_write = []
+        i = 0
+
+        with Pool(processes=workers) as pool:
+            for comp_block, index_entry, comp_size, n_entries in pool.imap(
+                _compress_record_block, tasks, chunksize=1
+            ):
+                i += 1
+                recordb_index.append(index_entry)
+                recordblocks_total_size += comp_size
+                to_write.append(comp_block)
+                if i >= 200:
+                    outfile.write(b''.join(to_write))
+                    to_write.clear() 
+                    i = 0
+                callback and callback(n_entries)
+            outfile.write(b''.join(to_write))
+
         end_pos = outfile.tell()
-        self._recordb_index = b''.join(recordb_index)
+        self._recordb_index = b"".join(recordb_index)
         self._recordb_index_size = len(self._recordb_index)
-        # fill REAL value
+
+        # Patch header
         outfile.seek(record_pos)
-        outfile.write(struct.pack(record_format,
-                                  len(self._record_blocks),
-                                  self._num_entries,
-                                  self._recordb_index_size,
-                                  recordblocks_total_size))
+        outfile.write(struct.pack(
+            record_format,
+            len(self._record_blocks),
+            self._num_entries,
+            self._recordb_index_size,
+            recordblocks_total_size,
+        ))
         outfile.write(self._recordb_index)
         outfile.seek(end_pos)
 
