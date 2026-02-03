@@ -6,7 +6,7 @@ import struct
 import os.path
 import functools
 import locale
-import zlib
+import deflate
 import datetime
 from html import escape
 
@@ -299,7 +299,7 @@ class MDictWriter(MDictWriterBase):
             ).encode("utf_16_le")
         f.write(struct.pack(b">L", len(header_string)))
         f.write(header_string)
-        f.write(struct.pack(b"<L", zlib.adler32(header_string) & 0xffffffff))
+        f.write(struct.pack(b"<L", deflate.adler32(header_string) & 0xffffffff))
 
 
 def pack(target, dictionary, title='', description='',
@@ -351,7 +351,7 @@ def txt2db(source, encoding='UTF-8', zip=False, callback=None):
                         raise ValueError('Error at line %s' % count)
                     content = ''.join(content)
                     if zip:
-                        content = zlib.compress(content.decode(encoding))
+                        content = deflate.zlib_compress(content.decode(encoding))
                     entries.append((key, content))
                     if count > max_batch:
                         c.executemany('INSERT INTO mdx VALUES (?,?)', entries)
@@ -382,7 +382,7 @@ def db2txt(source, encoding='UTF-8', zip=False, callback=None):
             for c in cur:
                 f.write(c[0] + '\r\n')
                 if zip:
-                    value = zlib.decompress(c[1]).decode(encoding)
+                    value = deflate.zlib_decompress(c[1]).decode(encoding)
                 else:
                     value = c[1]
                 f.write(value + '\r\n')
