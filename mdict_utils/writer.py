@@ -221,7 +221,7 @@ class MDictWriter(MDictWriterBase):
         outfile.write(struct.pack(record_format, 0, 0, 0, 0))
         outfile.write((struct.pack(index_format, 0, 0)) * len(self._record_blocks))
 
-        workers = max(1, round(0.5*os.cpu_count()))
+        workers = round(0.7*os.cpu_count())
         tasks = (
             (b._offset_table, self._compression_type, self._version)
             for b in self._record_blocks
