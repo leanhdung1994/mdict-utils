@@ -1,6 +1,6 @@
 This fork increses significantly the speed of generating MDX from TXTs by
 
-- replacing `zlib` with the [deflate](https://github.com/dcwatson/deflate).
+- replacing `zlib <https://docs.python.org/3/library/zlib.html>`_ with `deflate <https://github.com/dcwatson/deflate>`_.
 
 - employing the paradigm *compress blocks in parallel and write them sequentially in batch*.
 
