@@ -8,10 +8,9 @@ For testing, I generate MDX from a 8.77GB TXT file containing 1.992.410 entries 
 
 .. code-block:: console
 
-    ======================================================================
       Running fork: liuyug
-      URL:  https://codeload.github.com/liuyug/mdict-utils/zip/refs/heads/master
-    ======================================================================
+      URL         : https://codeload.github.com/liuyug/mdict-utils/zip/refs/heads/master
+    ==============================
     Creating virtual environment...
     Installing package from https://codeload.github.com/liuyug/mdict-utils/zip/refs/heads/master ...
     Running tests (mdx_test.py) ...
@@ -22,12 +21,12 @@ For testing, I generate MDX from a 8.77GB TXT file containing 1.992.410 entries 
                         --- Elapsed time: 226.030665 seconds ---
     Removing virtual environment...
     Finished cleanup for liuyug
+    ==============================
 
 
-    ======================================================================
       Running fork: leanhdung1994
-      URL:  https://codeload.github.com/leanhdung1994/mdict-utils/zip/refs/heads/master
-    ======================================================================
+      URL         : https://codeload.github.com/leanhdung1994/mdict-utils/zip/refs/heads/master
+    ==============================
     Creating virtual environment...
     Installing package from https://codeload.github.com/leanhdung1994/mdict-utils/zip/refs/heads/master ...
     Running tests (mdx_test.py) ...
@@ -38,6 +37,7 @@ For testing, I generate MDX from a 8.77GB TXT file containing 1.992.410 entries 
                         --- Elapsed time: 129.658956 seconds ---
     Removing virtual environment...
     Finished cleanup for leanhdung1994
+    ==============================
 
 The compression throughput is increased from ``20135.71rec/s`` to ``188208.58rec/s``. As such, the compression time is reduced from ``1m38s`` to ``10s``.
 
